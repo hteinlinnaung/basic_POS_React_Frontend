@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
 
         {/* Sidebar Toggle Button for Mobile */}
-        <button className="lg:hidden ms-5" onClick={toggleSidebar}>
+        <button className="lg:hidden" onClick={toggleSidebar}>
           <span className="sr-only">Toggle sidebar</span>
           <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />

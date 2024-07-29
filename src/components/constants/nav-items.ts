@@ -6,6 +6,7 @@ export type NavItem =
   | "Reports"
   | "Orders"
   | "Teams"
+  |  "Payments"
   |"Settings"
 
 export const NAV_ITEMS: NavItem[] = [
@@ -16,5 +17,6 @@ export const NAV_ITEMS: NavItem[] = [
    "Reports",
    "Orders",
    "Teams",
+   "Payments",
    "Settings",
   ];

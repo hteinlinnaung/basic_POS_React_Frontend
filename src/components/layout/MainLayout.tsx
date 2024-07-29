@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet } from 'react-router-dom'; // Import Outlet
 import Sidebar from './Sidebar';
 import Header from './Header';
 
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  let sidebarTimeout: NodeJS.Timeout | null = null;
+  const [sidebarTimeout, setSidebarTimeout] = useState<NodeJS.Timeout | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -13,9 +14,24 @@ const MainLayout: React.FC = () => {
       clearTimeout(sidebarTimeout);
     }
     if (!sidebarOpen) {
-      sidebarTimeout = setTimeout(() => {
+      setSidebarTimeout(setTimeout(() => {
         setSidebarOpen(false);
-      }, 10000);
+      }, 5000));
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (sidebarTimeout) {
+      clearTimeout(sidebarTimeout);
+    }
+    setSidebarOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (sidebarOpen) {
+      setSidebarTimeout(setTimeout(() => {
+        setSidebarOpen(false);
+      }, 1000));
     }
   };
 
@@ -25,17 +41,22 @@ const MainLayout: React.FC = () => {
         clearTimeout(sidebarTimeout);
       }
     };
-  }, []);
+  }, [sidebarTimeout]);
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <div
+        ref={sidebarRef}
         className={`fixed inset-0 flex z-40 ${
           sidebarOpen ? 'block' : 'hidden'
         } lg:block lg:static lg:inset-auto md:w-64`}
       >
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        />
       </div>
 
       {/* Main content */}
