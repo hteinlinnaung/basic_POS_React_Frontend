@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Container,
@@ -14,14 +13,12 @@ import {
   Text,
   Button,
   Modal,
- // useMantineTheme,
 } from "@mantine/core";
 import {
   IconSearch,
   IconSortAscending,
   IconSortDescending,
   IconPlus,
-//  IconUser,
 } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -49,7 +46,6 @@ const Customers: React.FC = () => {
   const [activePage, setActivePage] = useState<number>(1);
   const itemsPerPage = 5;
   const [modalOpened, setModalOpened] = useState(false);
-  //const theme = useMantineTheme();
 
   const form = useForm({
     initialValues: {
@@ -73,7 +69,6 @@ const Customers: React.FC = () => {
   });
 
   const [debouncedSearch] = useDebouncedValue(form.values.search, 300);
-
 
   const filterCustomers = useCallback(() => {
     let filtered = customers;
@@ -99,13 +94,11 @@ const Customers: React.FC = () => {
     }
 
     setFilteredCustomers(filtered);
-  },[customers, debouncedSearch, form.values.status, sortField, sortOrder]);
+  }, [customers, debouncedSearch, form.values.status, sortField, sortOrder]);
 
   useEffect(() => {
     filterCustomers();
   }, [debouncedSearch, filterCustomers, form.values.status, sortField, sortOrder]);
-
-
 
   const handleSort = (field: keyof Customer) => {
     const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
@@ -125,8 +118,8 @@ const Customers: React.FC = () => {
       id: customers.length + 1,
       ...newCustomerForm.values,
     };
-    setCustomers([...customers, newCustomer]);
-    setFilteredCustomers([...customers, newCustomer]);
+    setCustomers([newCustomer, ...customers]); // Insert new customer at the beginning
+    setFilteredCustomers([newCustomer, ...customers]); // Update filtered customers
     newCustomerForm.reset();
     setModalOpened(false);
   };
@@ -134,7 +127,7 @@ const Customers: React.FC = () => {
   return (
     <Container fluid>
       <Paper withBorder shadow="sm" p="md">
-        <Stack  style={{overflowX:'auto'}} gap="lg">
+        <Stack gap="lg">
           <Title order={2} style={{ textAlign: "center" }}>
             Customers
           </Title>
@@ -153,22 +146,18 @@ const Customers: React.FC = () => {
               Add Customer
             </Button>
           </Group>
-
-          
-          <Table 
-       
-             horizontalSpacing="lg"
-             verticalSpacing="md"
-             striped
-             highlightOnHover
-             withColumnBorders
-             withTableBorder
-             stickyHeader
-             stickyHeaderOffset={60}
-             className="mb-9"
+          <Table
+            horizontalSpacing="lg"
+            verticalSpacing="md"
+            striped
+            highlightOnHover
+            withColumnBorders
+            withTableBorder
+            stickyHeader
+            stickyHeaderOffset={60}
+            className="mb-9"
           >
             <Table.Thead>
-              
               <Table.Tr>
                 <Table.Th onClick={() => handleSort("id")}>
                   ID{" "}
@@ -229,7 +218,6 @@ const Customers: React.FC = () => {
               ))}
             </Table.Tbody>
           </Table>
-         
           {filteredCustomers.length === 0 && (
             <Center mt="lg">
               <Text>No results found</Text>

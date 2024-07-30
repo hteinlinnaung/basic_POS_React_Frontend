@@ -13,7 +13,6 @@ import {
   Button,
   Modal,
   NumberInput,
-  Notification,
 } from "@mantine/core";
 import {
   IconSearch,
@@ -25,6 +24,8 @@ import {
 } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
+
+import { showNotification } from "@mantine/notifications";
 
 interface Order {
   id: number;
@@ -55,13 +56,6 @@ const Orders: React.FC = () => {
   const [activePage, setActivePage] = useState<number>(1);
   const itemsPerPage = 5;
   const [modalOpened, setModalOpened] = useState(false);
-  const [notification, setNotification] = useState<{
-    title: string;
-    message: string;
-    color: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    icon: any;
-  } | null>(null);
 
   const form = useForm({
     initialValues: {
@@ -130,44 +124,40 @@ const Orders: React.FC = () => {
 
   const handleAddOrder = () => {
     if (newOrderForm.validate().hasErrors) {
-      setNotification({
+      showNotification({
         title: "Error",
         message: "Please fill out all fields",
         color: "red",
         icon: <IconX />,
+        autoClose: 3000,
+        position: "top-right",
       });
       return;
     }
+
     const newOrder: Order = {
       id: orders.length + 1,
       ...newOrderForm.values,
     };
-    setOrders([...orders, newOrder]);
-    setFilteredOrders([...orders, newOrder]);
+    setOrders([newOrder, ...orders]);
+    setFilteredOrders([newOrder, ...orders]);
     newOrderForm.reset();
     setModalOpened(false);
-    setNotification({
+
+    showNotification({
       title: "Success",
       message: "Order added successfully",
       color: "green",
       icon: <IconCheck />,
+      autoClose: 3000,
+      position: "top-right",
     });
   };
 
   return (
     <Container fluid>
-      {notification && (
-        <Notification
-          title={notification.title}
-          color={notification.color}
-          icon={notification.icon}
-          onClose={() => setNotification(null)}
-        >
-          {notification.message}
-        </Notification>
-      )}
       <Paper withBorder shadow="sm" p="md">
-        <Stack style={{overflowX:'auto'}} gap="lg">
+        <Stack style={{ overflowX: "auto" }} gap="lg">
           <Title order={2} style={{ textAlign: "center" }}>
             Orders
           </Title>
@@ -294,11 +284,11 @@ const Orders: React.FC = () => {
               min={1}
               {...newOrderForm.getInputProps("quantity")}
             />
+
             <NumberInput
               label="Total"
               placeholder="Enter total"
               min={0}
-              /* precision={2} */
               {...newOrderForm.getInputProps("total")}
             />
             <Group align="right">
