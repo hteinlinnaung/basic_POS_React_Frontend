@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+/* import React, { useState, useEffect, useCallback } from "react";
 import {
   Container,
   Paper,
@@ -266,6 +266,185 @@ const Orders: React.FC = () => {
           </Stack>
         </form>
       </Modal>
+    </Container>
+  );
+};
+
+export default Orders;
+
+ */
+
+
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Container,
+  Paper,
+  Stack,
+  Title,
+  Pagination,
+  Center,
+  Text,
+  Button,
+  
+  TextInput,
+  Group,
+} from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import { useForm } from "@mantine/form";
+import { showNotification } from "@mantine/notifications";
+import { IconSearch, IconPlus, IconCheck, IconX } from "@tabler/icons-react";
+import { Order } from './types';
+//import OrderTable from './OrderTable';
+import AddOrderModal from './subComponents/AddOrderModel';
+import OrderTable from './subComponents/OrderTable';
+// Sample data
+const sampleOrders: Order[] = [
+  {
+    id: 1,
+    customerName: "Alice Brown",
+    item: "Widget",
+    quantity: 3,
+    total: 300,
+  },
+  {
+    id: 2,
+    customerName: "Bob Green",
+    item: "Gadget",
+    quantity: 2,
+    total: 200,
+  },
+];
+
+const Orders: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>(sampleOrders);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>(sampleOrders);
+  const [sortField, setSortField] = useState<keyof Order | "">("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [activePage, setActivePage] = useState<number>(1);
+  const itemsPerPage = 5;
+  const [modalOpened, setModalOpened] = useState<boolean>(false);
+
+  // Form handling
+  const form = useForm({
+    initialValues: { search: "" },
+  });
+
+  const [debouncedSearch] = useDebouncedValue(form.values.search, 300);
+
+  // Filtering orders based on search and sort criteria
+  const filterOrders = useCallback(() => {
+    let filtered = orders;
+
+    if (debouncedSearch) {
+      filtered = filtered.filter(order =>
+        order.customerName.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
+    }
+
+    if (sortField) {
+      filtered.sort((a, b) => {
+        if (sortOrder === "asc") {
+          return a[sortField] > b[sortField] ? 1 : -1;
+        } else {
+          return a[sortField] < b[sortField] ? 1 : -1;
+        }
+      });
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, debouncedSearch, sortField, sortOrder]);
+
+  useEffect(() => {
+    filterOrders();
+  }, [debouncedSearch, filterOrders, sortField, sortOrder]);
+
+  // Sorting handler
+  const handleSort = (field: keyof Order) => {
+    setSortField(prevField => prevField === field && sortOrder === "asc" ? "" : field);
+    setSortOrder(prevOrder => prevOrder === "asc" ? "desc" : "asc");
+  };
+
+  // Paginated orders
+  const getPaginatedOrders = () => {
+    const startIndex = (activePage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredOrders.slice(startIndex, endIndex);
+  };
+
+  // Adding new order
+  const handleAddOrder = (newOrder: Order) => {
+    if (newOrder.customerName && newOrder.item && newOrder.quantity > 0 && newOrder.total >= 0) {
+      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      setFilteredOrders(prevOrders => [newOrder, ...prevOrders]);
+      setModalOpened(false);
+
+      showNotification({
+        title: "Success",
+        message: "Order added successfully",
+        color: "green",
+        icon: <IconCheck />,
+        autoClose: 3000,
+        position: "top-right",
+      });
+    } else {
+      showNotification({
+        title: "Error",
+        message: "Please fill out all fields correctly",
+        color: "red",
+        icon: <IconX />,
+        autoClose: 3000,
+        position: "top-right",
+      });
+    }
+  };
+
+  return (
+    <Container fluid>
+      <Paper withBorder shadow="sm" p="md">
+        <Stack style={{ overflowX: "auto" }} gap="lg">
+          <Title order={2} style={{ textAlign: "center" }}>Orders</Title>
+
+          <Stack>
+          <Group grow>
+            <TextInput
+              placeholder="Search by customer name"
+              leftSection={<IconSearch />}
+              {...form.getInputProps("search")}
+            />
+            <Button
+              leftSection={<IconPlus size={16} />}
+              onClick={() => setModalOpened(true)}
+            >
+              Add Order
+            </Button>
+            </Group>
+          </Stack>
+          <OrderTable
+            orders={getPaginatedOrders()}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            handleSort={handleSort}
+          />
+          {filteredOrders.length === 0 && (
+            <Center mt="lg">
+              <Text>No results found</Text>
+            </Center>
+          )}
+          <Center mt="lg">
+            <Pagination
+              value={activePage}
+              onChange={setActivePage}
+              total={Math.ceil(filteredOrders.length / itemsPerPage)}
+            />
+          </Center>
+        </Stack>
+      </Paper>
+
+      <AddOrderModal
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        onAddOrder={handleAddOrder}
+      />
     </Container>
   );
 };
