@@ -24,9 +24,9 @@ import {
 } from "@tabler/icons-react";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-
 import { showNotification } from "@mantine/notifications";
 
+// TypeScript interface for Order
 interface Order {
   id: number;
   customerName: string;
@@ -44,8 +44,13 @@ const sampleOrders: Order[] = [
     quantity: 3,
     total: 300,
   },
-  { id: 2, customerName: "Bob Green", item: "Gadget", quantity: 2, total: 200 },
-  // Add more sample data as needed
+  {
+    id: 2,
+    customerName: "Bob Green",
+    item: "Gadget",
+    quantity: 2,
+    total: 200,
+  },
 ];
 
 const Orders: React.FC = () => {
@@ -55,12 +60,11 @@ const Orders: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [activePage, setActivePage] = useState<number>(1);
   const itemsPerPage = 5;
-  const [modalOpened, setModalOpened] = useState(false);
+  const [modalOpened, setModalOpened] = useState<boolean>(false);
 
+  // Form handling
   const form = useForm({
-    initialValues: {
-      search: "",
-    },
+    initialValues: { search: "" },
   });
 
   const newOrderForm = useForm({
@@ -73,23 +77,20 @@ const Orders: React.FC = () => {
     validate: {
       customerName: (value) => (value ? null : "Customer name is required"),
       item: (value) => (value ? null : "Item is required"),
-      quantity: (value) =>
-        value > 0 ? null : "Quantity must be greater than 0",
-      total: (value) =>
-        value >= 0 ? null : "Total must be greater than or equal to 0",
+      quantity: (value) => (value > 0 ? null : "Quantity must be greater than 0"),
+      total: (value) => (value >= 0 ? null : "Total must be greater than or equal to 0"),
     },
   });
 
   const [debouncedSearch] = useDebouncedValue(form.values.search, 300);
 
+  // Filtering orders based on search and sort criteria
   const filterOrders = useCallback(() => {
     let filtered = orders;
 
     if (debouncedSearch) {
-      filtered = filtered.filter((order) =>
-        order.customerName
-          .toLowerCase()
-          .includes(debouncedSearch.toLowerCase()),
+      filtered = filtered.filter(order =>
+        order.customerName.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
     }
 
@@ -110,19 +111,23 @@ const Orders: React.FC = () => {
     filterOrders();
   }, [debouncedSearch, filterOrders, sortField, sortOrder]);
 
+  // Sorting handler
   const handleSort = (field: keyof Order) => {
-    const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
-    setSortField(field);
-    setSortOrder(order);
+    setSortField(prevField => prevField === field && sortOrder === "asc" ? "" : field);
+    setSortOrder(prevOrder => prevOrder === "asc" ? "desc" : "asc");
   };
 
+  // Paginated orders
   const getPaginatedOrders = () => {
     const startIndex = (activePage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredOrders.slice(startIndex, endIndex);
   };
 
+  // Adding new order
   const handleAddOrder = () => {
+    const { customerName, item, quantity, total } = newOrderForm.values;
+
     if (newOrderForm.validate().hasErrors) {
       showNotification({
         title: "Error",
@@ -137,10 +142,14 @@ const Orders: React.FC = () => {
 
     const newOrder: Order = {
       id: orders.length + 1,
-      ...newOrderForm.values,
+      customerName,
+      item,
+      quantity,
+      total,
     };
-    setOrders([newOrder, ...orders]);
-    setFilteredOrders([newOrder, ...orders]);
+
+    setOrders(prevOrders => [newOrder, ...prevOrders]);
+    setFilteredOrders(prevOrders => [newOrder, ...prevOrders]);
     newOrderForm.reset();
     setModalOpened(false);
 
@@ -158,9 +167,7 @@ const Orders: React.FC = () => {
     <Container fluid>
       <Paper withBorder shadow="sm" p="md">
         <Stack style={{ overflowX: "auto" }} gap="lg">
-          <Title order={2} style={{ textAlign: "center" }}>
-            Orders
-          </Title>
+          <Title order={2} style={{ textAlign: "center" }}>Orders</Title>
           <Group grow>
             <TextInput
               placeholder="Search by customer name"
@@ -187,55 +194,18 @@ const Orders: React.FC = () => {
           >
             <Table.Thead>
               <Table.Tr>
-                <Table.Th onClick={() => handleSort("id")}>
-                  ID{" "}
-                  {sortField === "id" &&
-                    (sortOrder === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    ))}
-                </Table.Th>
-                <Table.Th onClick={() => handleSort("customerName")}>
-                  Customer Name{" "}
-                  {sortField === "customerName" &&
-                    (sortOrder === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    ))}
-                </Table.Th>
-                <Table.Th onClick={() => handleSort("item")}>
-                  Item{" "}
-                  {sortField === "item" &&
-                    (sortOrder === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    ))}
-                </Table.Th>
-                <Table.Th onClick={() => handleSort("quantity")}>
-                  Quantity{" "}
-                  {sortField === "quantity" &&
-                    (sortOrder === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    ))}
-                </Table.Th>
-                <Table.Th onClick={() => handleSort("total")}>
-                  Total{" "}
-                  {sortField === "total" &&
-                    (sortOrder === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    ))}
-                </Table.Th>
+                {["id", "customerName", "item", "quantity", "total"].map((field) => (
+                  <Table.Th key={field} onClick={() => handleSort(field as keyof Order)}>
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                    {sortField === field && (
+                      sortOrder === "asc" ? <IconSortAscending size={16} /> : <IconSortDescending size={16} />
+                    )}
+                  </Table.Th>
+                ))}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {getPaginatedOrders().map((order) => (
+              {getPaginatedOrders().map(order => (
                 <Table.Tr key={order.id}>
                   <Table.Td>{order.id}</Table.Td>
                   <Table.Td>{order.customerName}</Table.Td>
@@ -284,7 +254,6 @@ const Orders: React.FC = () => {
               min={1}
               {...newOrderForm.getInputProps("quantity")}
             />
-
             <NumberInput
               label="Total"
               placeholder="Enter total"
